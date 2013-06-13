@@ -7,9 +7,9 @@ type exp =
   | String of string
   | LValue of lvalue
   | Nil
-  | FunCall of exp * exp list
-  | ArrayCreation of exp * exp
-  | RecordCreation of (id * exp) list
+  | FunCall of id * exp list
+  | Array of type_id * exp * exp
+  | Record of type_id * (id * exp) list
   | ExpSeq of exp list
   | LetExp of decl list * exp list
   | Assign of lvalue * exp
@@ -17,6 +17,11 @@ type exp =
   | ArithExp of arith_exp
   | BoolExp of bool_exp
   | CmpExp of cmp_exp
+
+  | While of exp * exp
+  | For of id * exp * exp * exp
+  | IfThen of exp * exp
+  | IfThenElse of exp * exp * exp
 
 and arith_exp =
   | Add of exp * exp
@@ -38,9 +43,15 @@ and cmp_exp =
 
 and decl =
   | VarDecl of id * type_id option * exp
-  | FuncDecl of id * tyfields * type_id option * exp
+  | FunDecl of id * tyfields * type_id option * exp
+  | TypeDecl of type_id * type_spec
 
 and lvalue =
-  | Var of id
-  | ArrayAccess of lvalue * id
-  | RecordAccess of lvalue * exp
+  | Ident of id
+  | ArrayAccess of lvalue * exp
+  | RecordAccess of lvalue * id
+
+and type_spec =
+  | TypeId of type_id
+  | TypeArray of type_id
+  | TypeRecord of tyfields
