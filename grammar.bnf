@@ -1,0 +1,73 @@
+program = exp
+
+type_id = id
+
+digit = "0"-"9"
+digits = digits+
+int = ("-")? digits
+
+exp = let_exp
+    | lvalue
+    | nil
+    | string
+    | int
+    | fun_call
+    | exp_seq
+    | arith_exp
+    | cmp_exp
+    | bool_exp
+    | "(" exp ")"
+
+arith_exp = exp "+" exp
+          | exp "-" exp
+          | exp "*" exp
+          | exp "/" exp
+
+
+cmp_exp = exp "="  exp
+        | exp "<>" exp
+        | exp "<"  exp
+        | exp "<=" exp
+        | exp ">"  exp
+        | exp ">=" exp
+
+bool_exp = exp "|" exp
+         | exp "&" exp
+
+let_exp = "let" decls "in" let_exp_seq "end"
+let_exp_seq = ""
+            | exp {";" exp}
+
+
+fun_call = id "()"
+         | id "(" exp {"," exp} ")"
+
+exp_seq = "()"
+        | "(" exp {";" exp} ")"
+
+decls = {decl}
+
+decl = ty_decl | var_decl | fun_decl
+
+ty_decl  = "type" type_id "=" ty
+ty       = type_id
+         | "{"  tyfields "}"
+         | "array of" type_id
+tyfields = ""
+         | id ":" type_id {"," id ":" type_id }
+
+
+var_decl = "var" id (":" type_id)? ":=" exp
+
+fun_decl = "function" id "(" tyfields ")" (":" type_id)? "=" exp
+
+lvalue = id
+       | lvalue "." id
+       | lvalue "[" exp "]"
+
+if_then_else = "if" exp "then" exp "else" exp
+if_then      = "if" exp "then" exp
+
+while = "while" exp "do" exp
+
+for = "for" id ":=" exp "to" exp "do" exp

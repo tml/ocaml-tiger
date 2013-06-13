@@ -1,0 +1,41 @@
+LetExp(
+[VarDecl("N", None, Int 8);
+ TypeDecl("intArray", ArrayOf("int"));  (* XXX *)
+ VarDecl("row", None, ArrayCreation(Var "N", Int 0));
+ VarDecl("col", None, ArrayCreation(Var "N", Int 0));
+ VarDecl("diag1", None, ArrayCreation(ArithExp(Sub(ArithExp(Add(Var "N", Var "N")), Int 1)), Int 0));
+ VarDecl("diag2", None, ArrayCreation(ArithExp(Sub(ArithExp(Add(Var "N", Var "N")), Int 1)), Int 0));
+
+ FunDecl("printboard", [], None,
+         ExpSeq([For("i", Int 0, ArithExp(Sub(Var "N", Int 1)),
+                     ExpSeq([For("j", Int 0, ArithExp(Sub(Var "N", Int 1)),
+                                 FunCall(Var "print",
+                                         IfThenElse(CmpExp(Eq(ArrayAccess(Var "Col", Var "i"),
+                                                              Var "j")),
+                                                    String " 0",
+                                                    String " .")));
+                             FunCall(Var "print", String "\n")]));
+                 FunCall(Var "print", String "\n")]));
+
+ FunDecl("try", [("c", "int")], None,
+         IfThenElse(CmpExp(Eq(Var "c", Var "N")),
+                    FunCall(Var "printboard", []),
+                    For("r", Int 0, ArithExp(Sub(Var "N", Int 1)),
+                        IfThen(And(CmpExp(Eq(ArrayAccess(Var "row", Var "r"), Int 0)),
+                                   And(CmpExp(Eq(ArrayAccess(Var "diag1",
+                                                             ArithExp(Add(Var "r", Var "c"))))
+                                                 Int 0),
+                                       CmpExp(Eq(ArrayAccess(Var "diag2",
+                                                             ArithExp(Sub(ArithExp(Add(Var "r", Int 7))),
+                                                                      Var "c"))),
+                                              Int 0))),
+                               ExpSeq([
+                                      Assign(LValueArr(Var "row", Var "r"), Int 1)
+                                    ])
+
+
+
+],
+
+[FunCall(Var "try", [Int 0])]
+)
