@@ -1,12 +1,17 @@
 type id = string
 type type_id = string
 type tyfields = (id * type_id) list
+type type_spec =
+  | TypeId of type_id
+  | TypeArray of type_id
+  | TypeRecord of tyfields
 
 type exp =
   | Int of int
   | String of string
   | LValue of lvalue
   | Nil
+  | Break
   | FunCall of id * exp list
   | Array of type_id * exp * exp
   | Record of type_id * (id * exp) list
@@ -50,8 +55,3 @@ and lvalue =
   | Ident of id
   | ArrayAccess of lvalue * exp
   | RecordAccess of lvalue * id
-
-and type_spec =
-  | TypeId of type_id
-  | TypeArray of type_id
-  | TypeRecord of tyfields

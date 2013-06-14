@@ -51,7 +51,7 @@ let test_punctuation2 () =
 
 let test_invalid_punctuation () =
   let is_invalid_char s =
-    try (lex_string s; false)
+    try (ignore (lex_string s); false)
     with Lexer.LexingError _ -> true
   in
 

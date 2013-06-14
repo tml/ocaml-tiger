@@ -19,10 +19,136 @@
 
 %token Eof
 
-%start <Ast.exp> prgm
+%start <Ast.exp> program
 
 %%
 
 
-prgm:
-| _ = Eof { Ast.Nil }
+program:
+| e=exp Eof { e }
+
+exp:
+| Nil { Ast.Nil }
+| Break { Ast.Break }
+| x=Int { Ast.Int x }
+| s=String { Ast.String s }
+| l=lvalue { Ast.LValue l }
+| f=funcall { f }
+| LParen es=exp_seq RParen { Ast.ExpSeq es }
+| ae=arith_exp { Ast.ArithExp ae }
+| ce=cmp_exp { Ast.CmpExp ce }
+| be=bool_exp { Ast.BoolExp be }
+| le=let_exp { le }
+| a=assign_stmt { a }
+| w=while_stmt { w }
+| f=for_stmt { f }
+| it=if_then_stmt { it }
+| ite=if_then_else_stmt { ite }
+| a=array_exp { a }
+| r=record_exp { r }
+| LParen e=exp RParen { e }
+
+lvalue:
+| i=Ident { Ast.Ident i }
+| lv=lvalue LBracket e=exp RBracket { Ast.ArrayAccess(lv, e) }
+| lv=lvalue Dot i=Ident { Ast.RecordAccess(lv, i) }
+
+funcall:
+| i=Ident LParen el=exp_list RParen { Ast.FunCall(i, el) }
+
+exp_list:
+| { [] }
+| e=exp { [e] }
+| e=exp Comma el=exp_list { e::el }
+
+exp_seq:
+| { [] }
+| e=exp { [e] }
+| e=exp SemiColon es = exp_seq { e::es }
+
+
+arith_exp:
+| e1=exp Plus e2=exp { Ast.Add(e1, e2) }
+| e1=exp Minus e2=exp { Ast.Sub(e1, e2) }
+| e1=exp Times e2=exp { Ast.Mul(e1, e2) }
+| e1=exp Div e2=exp { Ast.Div(e1, e2) }
+
+cmp_exp:
+| e1=exp Eq e2=exp { Ast.Eq(e1, e2) }
+| e1=exp Neq e2=exp { Ast.Neq(e1, e2) }
+| e1=exp Lt e2=exp { Ast.Lt(e1, e2) }
+| e1=exp Le e2=exp { Ast.Le(e1, e2) }
+| e1=exp Gt e2=exp { Ast.Gt(e1, e2) }
+| e1=exp Ge e2=exp { Ast.Ge(e1, e2) }
+
+bool_exp:
+| e1=exp Ampersand e2=exp { Ast.And(e1, e2) }
+| e1=exp Pipe e2=exp { Ast.Or(e1, e2) }
+
+let_exp:
+| Let ds=decls In le=let_exp_seq End { Ast.LetExp(ds, le) }
+
+decls:
+| ds=list(decl) { ds }
+
+decl:
+| vd=var_decl { vd }
+| td=type_decl { td }
+| fd=fun_decl { fd }
+
+var_decl:
+| Var i=Ident ColonEqual e=exp { Ast.VarDecl(i, None, e) }
+| Var i=Ident Colon t=Ident ColonEqual e=exp { Ast.VarDecl(i, Some t, e) }
+
+type_decl:
+| Type i=Ident Eq t=type_spec { Ast.TypeDecl(i, t) }
+
+type_spec:
+| i=Ident { Ast.TypeId i }
+| Array Of i=Ident { Ast.TypeArray i }
+| LBrace rt=record_type RBrace { Ast.TypeRecord rt }
+
+record_type:
+| { [] }
+| v=Ident Colon t=Ident { [(v, t)] }
+| v=Ident Colon t=Ident SemiColon rt=record_type { (v,t)::rt }
+
+fun_decl:
+| Function i=Ident LParen pl=param_list RParen Eq e=exp { Ast.FunDecl(i, pl, None, e) }
+| Function i=Ident LParen pl=param_list RParen Colon t=Ident Eq e=exp { Ast.FunDecl(i, pl, Some t, e) }
+
+param_list:
+| { [] }
+| v=Ident Colon t=Ident { [(v, t)] }
+| v=Ident Colon t=Ident Comma pl=param_list { (v,t)::pl }
+
+let_exp_seq:
+| { [] }
+| e=exp { [e] }
+| e=exp SemiColon es=let_exp_seq { e::es }
+
+assign_stmt:
+| l=lvalue ColonEqual e=exp { Ast.Assign(l, e) }
+
+while_stmt:
+| While e1=exp Do e2=exp { Ast.While(e1, e2) }
+
+for_stmt:
+| For i=Ident ColonEqual e1=exp To e2=exp Do e3=exp { Ast.For(i, e1, e2, e3) }
+
+if_then_stmt:
+| If e1=exp Then e2=exp { Ast.IfThen(e1, e2) }
+
+if_then_else_stmt:
+| If e1=exp Then e2=exp Else e3=exp { Ast.IfThenElse(e1, e2, e3) }
+
+array_exp:
+| i=Ident LBracket e1=exp RBracket Of e2=exp { Ast.Array(i, e1, e2) }
+
+record_exp:
+| i=Ident LBrace fields=field_inits RBrace { Ast.Record(i, fields) }
+
+field_inits:
+| { [] }
+| i=Ident Eq e=exp { [(i, e)] }
+| i=Ident Eq e=exp SemiColon rest=field_inits { (i, e)::rest }
