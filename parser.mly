@@ -86,7 +86,7 @@ bool_exp:
 | e1=exp Pipe e2=exp { Ast.Or(e1, e2) }
 
 let_exp:
-| Let ds=decls In le=let_exp_seq End { Ast.LetExp(ds, le) }
+| Let ds=decls In le=exp_seq End { Ast.LetExp(ds, le) }
 
 decls:
 | ds=list(decl) { ds }
@@ -122,10 +122,6 @@ param_list:
 | v=Ident Colon t=Ident { [(v, t)] }
 | v=Ident Colon t=Ident Comma pl=param_list { (v,t)::pl }
 
-let_exp_seq:
-| { [] }
-| e=exp { [e] }
-| e=exp SemiColon es=let_exp_seq { e::es }
 
 assign_stmt:
 | l=lvalue ColonEqual e=exp { Ast.Assign(l, e) }
