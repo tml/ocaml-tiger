@@ -12,13 +12,13 @@ let rec string_of_exp = function
   | BoolExp be -> string_of_bool_exp be
   | ExpSeq es -> "(" ^ (String.concat "; " (List.map string_of_exp es)) ^ ")"
   | Assign(lv, e) -> string_of_lvalue lv ^ " := " ^ string_of_exp e
-  | IfThen(e1, e2) -> Printf.sprintf "if %s then %s" (string_of_exp e1) (string_of_exp e2)
+  | IfThen(e1, e2) -> Printf.sprintf "if %s then %s end" (string_of_exp e1) (string_of_exp e2)
   | IfThenElse(e1, e2, e3) ->
-    Printf.sprintf "if %s then %s else %s" (string_of_exp e1) (string_of_exp e2) (string_of_exp e3)
+    Printf.sprintf "if %s then %s else %s end" (string_of_exp e1) (string_of_exp e2) (string_of_exp e3)
   | While(e1, e2) ->
-    Printf.sprintf "while %s do %s" (string_of_exp e1) (string_of_exp e2)
+    Printf.sprintf "while %s do %s done" (string_of_exp e1) (string_of_exp e2)
   | For(id, e1, e2, e3) ->
-    Printf.sprintf "for %s := %s to %s do %s" id (string_of_exp e1) (string_of_exp e2) (string_of_exp e3)
+    Printf.sprintf "for %s := %s to %s do %s done" id (string_of_exp e1) (string_of_exp e2) (string_of_exp e3)
   | LetExp(ds, es) ->
     Printf.sprintf "let\n%s\nin\n%s\nend\n"
       (String.concat "\n" (List.map string_of_decl ds))

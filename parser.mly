@@ -5,7 +5,7 @@
 /* Keywords */
 %token Let In End Var Type Function
 %token Array Of Nil
-%token If Then Else For To Do While Break
+%token If Then Else For To Do Done While Break
 
 /* Punctuation */
 %token LParen RParen LBracket RBracket LBrace RBrace
@@ -19,6 +19,12 @@
 
 %token Eof
 
+%left Ampersand Pipe
+%nonassoc Eq Neq Lt Le Gt Ge
+%left Plus Minus
+%left Times Div
+%nonassoc neg
+
 %start <Ast.exp> program
 
 %%
@@ -31,6 +37,7 @@ exp:
 | Nil { Ast.Nil }
 | Break { Ast.Break }
 | x=Int { Ast.Int x }
+| Minus x=Int %prec neg { Ast.Int ~-x }
 | s=String { Ast.String s }
 | l=lvalue { Ast.LValue l }
 | f=funcall { f }
@@ -42,7 +49,6 @@ exp:
 | a=assign_stmt { a }
 | w=while_stmt { w }
 | f=for_stmt { f }
-| it=if_then_stmt { it }
 | ite=if_then_else_stmt { ite }
 | a=array_exp { a }
 | r=record_exp { r }
@@ -67,21 +73,21 @@ exp_seq:
 | e=exp SemiColon es = exp_seq { e::es }
 
 
-arith_exp:
-| e1=exp Plus e2=exp { Ast.Add(e1, e2) }
+%inline arith_exp:
+| e1=exp Plus  e2=exp { Ast.Add(e1, e2) }
 | e1=exp Minus e2=exp { Ast.Sub(e1, e2) }
 | e1=exp Times e2=exp { Ast.Mul(e1, e2) }
-| e1=exp Div e2=exp { Ast.Div(e1, e2) }
+| e1=exp Div   e2=exp { Ast.Div(e1, e2) }
 
-cmp_exp:
-| e1=exp Eq e2=exp { Ast.Eq(e1, e2) }
+%inline cmp_exp:
+| e1=exp Eq  e2=exp { Ast.Eq(e1, e2) }
 | e1=exp Neq e2=exp { Ast.Neq(e1, e2) }
-| e1=exp Lt e2=exp { Ast.Lt(e1, e2) }
-| e1=exp Le e2=exp { Ast.Le(e1, e2) }
-| e1=exp Gt e2=exp { Ast.Gt(e1, e2) }
-| e1=exp Ge e2=exp { Ast.Ge(e1, e2) }
+| e1=exp Lt  e2=exp { Ast.Lt(e1, e2) }
+| e1=exp Le  e2=exp { Ast.Le(e1, e2) }
+| e1=exp Gt  e2=exp { Ast.Gt(e1, e2) }
+| e1=exp Ge  e2=exp { Ast.Ge(e1, e2) }
 
-bool_exp:
+%inline bool_exp:
 | e1=exp Ampersand e2=exp { Ast.And(e1, e2) }
 | e1=exp Pipe e2=exp { Ast.Or(e1, e2) }
 
@@ -127,16 +133,14 @@ assign_stmt:
 | l=lvalue ColonEqual e=exp { Ast.Assign(l, e) }
 
 while_stmt:
-| While e1=exp Do e2=exp { Ast.While(e1, e2) }
+| While e1=exp Do e2=exp Done { Ast.While(e1, e2) }
 
 for_stmt:
-| For i=Ident ColonEqual e1=exp To e2=exp Do e3=exp { Ast.For(i, e1, e2, e3) }
-
-if_then_stmt:
-| If e1=exp Then e2=exp { Ast.IfThen(e1, e2) }
+| For i=Ident ColonEqual e1=exp To e2=exp Do e3=exp Done { Ast.For(i, e1, e2, e3) }
 
 if_then_else_stmt:
-| If e1=exp Then e2=exp Else e3=exp { Ast.IfThenElse(e1, e2, e3) }
+| If e1=exp Then e2=exp End { Ast.IfThen(e1, e2) }
+| If e1=exp Then e2=exp Else e3=exp End { Ast.IfThenElse(e1, e2, e3) }
 
 array_exp:
 | i=Ident LBracket e1=exp RBracket Of e2=exp { Ast.Array(i, e1, e2) }

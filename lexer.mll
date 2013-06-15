@@ -22,6 +22,7 @@ rule lexer = parse
   | "for" { For }
   | "to" { To }
   | "do" { Do }
+  | "done" { Done }
   | "while" { While }
   | "if" { If }
   | "then" { Then }
