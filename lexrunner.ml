@@ -16,7 +16,6 @@ let string_of_token = function
   | For -> "For"
   | To -> "To"
   | Do -> "Do"
-  | Done -> "Done"
   | While -> "While"
   | If -> "If"
   | Then -> "Then"

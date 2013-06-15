@@ -1,11 +1,14 @@
 %{
 
+  let pos p =
+    Printf.sprintf "%d:%d" p.Lexing.pos_lnum (p.Lexing.pos_cnum - p.Lexing.pos_bol)
+
 %}
 
 /* Keywords */
 %token Let In End Var Type Function
 %token Array Of Nil
-%token If Then Else For To Do Done While Break
+%token If Then Else For To Do While Break
 
 /* Punctuation */
 %token LParen RParen LBracket RBracket LBrace RBrace
@@ -19,11 +22,17 @@
 
 %token Eof
 
+%nonassoc Of
+%nonassoc Do
+%nonassoc Then
+%nonassoc Else
+%nonassoc If
+%nonassoc ColonEqual
 %left Ampersand Pipe
 %nonassoc Eq Neq Lt Le Gt Ge
 %left Plus Minus
 %left Times Div
-%nonassoc neg
+%nonassoc Uminus
 
 %start <Ast.exp> program
 
@@ -32,12 +41,13 @@
 
 program:
 | e=exp Eof { e }
+| error { raise (Error.Error (Printf.sprintf "%s %s" (pos $startpos) (pos $endpos))) }
 
 exp:
 | Nil { Ast.Nil }
 | Break { Ast.Break }
 | x=Int { Ast.Int x }
-| Minus x=Int %prec neg { Ast.Int ~-x }
+| Minus x=exp %prec Uminus { Ast.ArithExp (Ast.Sub(Ast.Int 0, x)) }
 | s=String { Ast.String s }
 | l=lvalue { Ast.LValue l }
 | f=funcall { f }
@@ -56,6 +66,8 @@ exp:
 
 lvalue:
 | i=Ident { Ast.Ident i }
+| i1=Ident Dot i2=Ident { Ast.RecordAccess(Ast.Ident i1, i2) }
+| i=Ident LBracket e=exp RBracket { Ast.ArrayAccess(Ast.Ident i, e) }
 | lv=lvalue LBracket e=exp RBracket { Ast.ArrayAccess(lv, e) }
 | lv=lvalue Dot i=Ident { Ast.RecordAccess(lv, i) }
 
@@ -133,14 +145,14 @@ assign_stmt:
 | l=lvalue ColonEqual e=exp { Ast.Assign(l, e) }
 
 while_stmt:
-| While e1=exp Do e2=exp Done { Ast.While(e1, e2) }
+| While e1=exp Do e2=exp { Ast.While(e1, e2) }
 
 for_stmt:
-| For i=Ident ColonEqual e1=exp To e2=exp Do e3=exp Done { Ast.For(i, e1, e2, e3) }
+| For i=Ident ColonEqual e1=exp To e2=exp Do e3=exp { Ast.For(i, e1, e2, e3) }
 
 if_then_else_stmt:
-| If e1=exp Then e2=exp End { Ast.IfThen(e1, e2) }
-| If e1=exp Then e2=exp Else e3=exp End { Ast.IfThenElse(e1, e2, e3) }
+| If e1=exp Then e2=exp { Ast.IfThen(e1, e2) }
+| If e1=exp Then e2=exp Else e3=exp { Ast.IfThenElse(e1, e2, e3) }
 
 array_exp:
 | i=Ident LBracket e1=exp RBracket Of e2=exp { Ast.Array(i, e1, e2) }

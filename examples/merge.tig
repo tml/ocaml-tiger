@@ -9,7 +9,7 @@ let
         ord(buffer) >= ord("0") & ord(buffer) <= ord("9")
     in
       while buffer=" " | buffer = "\n" do
-        buffer := getchar()
+        buffer := getchar();
       any.any := isdigit(buffer);
       while isdigit(buffer) do (
         i := i*10+ord(buffer)-ord("0");
@@ -17,7 +17,7 @@ let
       );
     end
 
-  type list = {first: int, rest: list}
+  type list = {first: int; rest: list}
 
   function readlist(): list =
     let
@@ -25,7 +25,7 @@ let
       var i := readint(any)
     in
       if any.any then
-        list{first=i, rest=readlist()}
+        list{first=i; rest=readlist()}
       else
         (buffer := getchar(); nil)
     end
@@ -34,9 +34,9 @@ let
     if a = nil then b
     else if b = nil then a
     else if a.first < b.first then
-      list{first=a.first, rest=merge(a.rest, b)}
+      list{first=a.first; rest=merge(a.rest, b)}
     else
-      list{first=b.first, rest=merge(a, b.rest)}
+      list{first=b.first; rest=merge(a, b.rest)}
 
   function printint(i: int) =
     let
