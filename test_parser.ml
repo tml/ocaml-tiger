@@ -23,8 +23,8 @@ let test_invalid_funcall () =
      array accesses and record accesses. *)
   assert_bool "test_invalid_funcall"
     (List.for_all (fun x -> x)
-       [try (ignore (parse_string "x[0]()"); false) with Error.Error -> true;
-        try (ignore (parse_string "x.y()"); false) with Error.Error -> true;
+       [(try (ignore (parse_string "x[0]()"); false) with Error.Error -> true);
+        (try (ignore (parse_string "x.y()"); false) with Error.Error -> true);
        ])
 
 let test_lvalue () =
@@ -41,6 +41,38 @@ let test_lvalue () =
     ]
 
 
+let test_arith () =
+  assert_equal
+    (List.map parse_string ["2+3"; "2+3-4"; "2*3+4"; "2+3/4"; "2*-3"; "(2+3)*4"])
+    [ArithExp(Add(Int 2, Int 3));
+     ArithExp(Sub(ArithExp(Add(Int 2, Int 3)), Int 4));
+     ArithExp(Add(ArithExp(Mul(Int 2, Int 3)), Int 4));
+     ArithExp(Add(Int 2, ArithExp(Div(Int 3, Int 4))));
+     ArithExp(Mul(Int 2, ArithExp(Sub(Int 0, Int 3))));
+     ArithExp(Mul(ArithExp(Add(Int 2, Int 3)), Int 4));
+    ]
+
+let test_parens () =
+  assert_equal
+    (List.map parse_string ["()"; "(1)"; "(1; 2)"])
+    [ExpSeq []; Int 1; ExpSeq [Int 1; Int 2]]
+
+let test_cmp () =
+  (* Comparison is not associative *)
+  assert_equal
+    (List.map parse_string ["1<2"; "x<=1"; "1=1"; "e>0"; "3>=2"]
+     @ [(try (ignore (parse_string "1<2<3"); Int 1) with Error.Error -> Int 0);
+        (try parse_string "1<(2<3)" with Error.Error -> Int 0)]
+    )
+    [CmpExp(Lt(Int 1, Int 2));
+     CmpExp(Le(LValue(Ident "x"), Int 1));
+     CmpExp(Eq(Int 1, Int 1));
+     CmpExp(Gt(LValue(Ident "e"), Int 0));
+     CmpExp(Ge(Int 3, Int 2));
+     Int 0;
+     CmpExp(Lt(Int 1, CmpExp(Lt(Int 2, Int 3))))]
+
+
 let suite =
   "parser suite" >::: [
     "test_zero" >:: test_zero;
@@ -54,6 +86,12 @@ let suite =
 
     "test_funcall" >:: test_funcall;
     "test_invalid_funcall" >:: test_invalid_funcall;
+
+    "test_lvalue" >:: test_lvalue;
+    "test_arith" >:: test_arith;
+    "test_cmp" >:: test_cmp;
+    "test_parens" >:: test_parens;
+
   ]
 
 let _ =
