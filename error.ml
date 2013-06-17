@@ -1,1 +1,1 @@
-exception Error of string
+exception Error

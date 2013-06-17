@@ -41,7 +41,7 @@
 
 program:
 | e=exp Eof { e }
-| error { raise (Error.Error (Printf.sprintf "%s %s" (pos $startpos) (pos $endpos))) }
+| error { raise Error.Error }
 
 exp:
 | Nil { Ast.Nil }
