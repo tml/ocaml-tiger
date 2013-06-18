@@ -113,7 +113,7 @@ decls:
 decl:
 | vd=var_decl { vd }
 | td=type_decl { td }
-| fd=fun_decl { fd }
+| fds=fun_decls { FunDecl fds }
 
 var_decl:
 | Var i=Ident ColonEqual e=exp { Ast.VarDecl(i, None, e) }
@@ -132,9 +132,21 @@ record_type:
 | v=Ident Colon t=Ident { [(v, t)] }
 | v=Ident Colon t=Ident SemiColon rt=record_type { (v,t)::rt }
 
+fun_decls:
+| ds=nonempty_list(fun_decl) { ds }
+
 fun_decl:
+(*
 | Function i=Ident LParen pl=param_list RParen Eq e=exp { Ast.FunDecl(i, pl, None, e) }
 | Function i=Ident LParen pl=param_list RParen Colon t=Ident Eq e=exp { Ast.FunDecl(i, pl, Some t, e) }
+*)
+| Function i=Ident LParen pl=param_list RParen o=option(colon_id) Eq e=exp {
+  match o with
+  | None -> (i, pl, None, e)
+  | Some t -> (i, pl, Some t, e)
+}
+
+colon_id: Colon t=Ident { t }
 
 param_list:
 | { [] }

@@ -122,6 +122,8 @@ let test_let () =
         "let function f(): int = 0 in 1 end";
         "let function f(x:int) = x in 1 end";
         "let function f(x:int, y:int): int = x+y in 1 end";
+        "let function a() = 1 function b() = 2 in 1 end";
+        "let function a() = 1 var b := 2 function c() = 3 in 1 end";
        ])
     [LetExp([], []);
      LetExp([], [Int 1]);
@@ -130,12 +132,18 @@ let test_let () =
      LetExp([TypeDecl("t", TypeId("int"))], [Int 1]);
      LetExp([TypeDecl("t", TypeRecord [("x", "int")])], [Int 1]);
      LetExp([TypeDecl("t", TypeArray "int")], [Int 1]);
-     LetExp([FunDecl("f", [], None, Int 0)], [Int 1]);
-     LetExp([FunDecl("f", [], Some "int", Int 0)], [Int 1]);
-     LetExp([FunDecl("f", [("x", "int")], None, LValue(Ident "x"))], [Int 1]);
-     LetExp([FunDecl("f", [("x", "int"); ("y", "int")], Some "int",
-                     ArithExp(Add(LValue(Ident "x"), LValue(Ident "y"))))],
+     LetExp([FunDecl([("f", [], None, Int 0)])], [Int 1]);
+     LetExp([FunDecl([("f", [], Some "int", Int 0)])], [Int 1]);
+     LetExp([FunDecl([("f", [("x", "int")], None, LValue(Ident "x"))])], [Int 1]);
+     LetExp([FunDecl([("f", [("x", "int"); ("y", "int")], Some "int",
+                     ArithExp(Add(LValue(Ident "x"), LValue(Ident "y"))))])],
             [Int 1]);
+     LetExp([FunDecl [("a", [], None, Int 1);
+                      ("b", [], None, Int 2)]], [Int 1]);
+     LetExp([FunDecl [("a", [], None, Int 1)];
+             VarDecl ("b", None, Int 2);
+             FunDecl [("c", [], None, Int 3)]], [Int 1]);
+
     ]
 
 

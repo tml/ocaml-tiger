@@ -48,7 +48,7 @@ and cmp_exp =
 
 and decl =
   | VarDecl of id * type_id option * exp
-  | FunDecl of id * tyfields * type_id option * exp
+  | FunDecl of (id * tyfields * type_id option * exp) list
   | TypeDecl of type_id * type_spec
 
 and lvalue =
