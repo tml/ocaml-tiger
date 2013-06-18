@@ -1,4 +1,4 @@
-EXT=native
+EXT=byte
 
 clean:
 	ocamlbuild -clean

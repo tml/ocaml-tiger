@@ -7,9 +7,10 @@ let parse_string str =
 let test_string () =
   assert_equal [parse_string "\"\""; parse_string "\"foo\""] [String ""; String "foo"]
 
-let test_zero () = assert_equal (parse_string "0") (Int 0)
-let test_positive () = assert_equal (parse_string "1") (Int 1)
-let test_negative () = assert_equal (parse_string "-1") (ArithExp (Sub (Int 0, Int 1)))
+let test_int () =
+  assert_equal
+    (List.map parse_string ["0"; "1"; "-1"])
+    [Int 0; Int 1; ArithExp(Sub(Int 0, Int 1))]
 
 let test_nil () = assert_equal (parse_string "nil") Nil
 let test_break () = assert_equal (parse_string "break") Break
@@ -72,12 +73,39 @@ let test_cmp () =
      Int 0;
      CmpExp(Lt(Int 1, CmpExp(Lt(Int 2, Int 3))))]
 
+let test_let () =
+  assert_equal
+    (List.map parse_string
+       ["let in end";
+        "let in 1 end";
+        "let var x: int := 1 in x end";
+        "let var x := 1 in x end";
+        "let type t = int in 1 end";
+        "let type t = {x:int} in 1 end";
+        "let type t = array of int in 1 end";
+        "let function f() = 0 in 1 end";
+        "let function f(): int = 0 in 1 end";
+        "let function f(x:int) = x in 1 end";
+        "let function f(x:int, y:int): int = x+y in 1 end";
+       ])
+    [LetExp([], []);
+     LetExp([], [Int 1]);
+     LetExp([VarDecl("x", Some "int", Int 1)], [LValue(Ident "x")]);
+     LetExp([VarDecl("x", None, Int 1)], [LValue(Ident "x")]);
+     LetExp([TypeDecl("t", TypeId("int"))], [Int 1]);
+     LetExp([TypeDecl("t", TypeRecord [("x", "int")])], [Int 1]);
+     LetExp([TypeDecl("t", TypeArray "int")], [Int 1]);
+     LetExp([FunDecl("f", [], None, Int 0)], [Int 1]);
+     LetExp([FunDecl("f", [], Some "int", Int 0)], [Int 1]);
+     LetExp([FunDecl("f", [("x", "int")], None, LValue(Ident "x"))], [Int 1]);
+     LetExp([FunDecl("f", [("x", "int"); ("y", "int")], Some "int",
+                     ArithExp(Add(LValue(Ident "x"), LValue(Ident "y"))))],
+            [Int 1]);
+    ]
 
 let suite =
   "parser suite" >::: [
-    "test_zero" >:: test_zero;
-    "test_positive" >:: test_positive;
-    "test_negative" >:: test_negative;
+    "test_int" >:: test_int;
 
     "test_nil" >:: test_nil;
     "test_break" >:: test_break;
@@ -92,6 +120,7 @@ let suite =
     "test_cmp" >:: test_cmp;
     "test_parens" >:: test_parens;
 
+    "test_let" >:: test_let;
   ]
 
 let _ =
