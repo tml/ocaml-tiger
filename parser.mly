@@ -28,7 +28,8 @@
 %nonassoc Else
 %nonassoc If
 %nonassoc ColonEqual
-%left Ampersand Pipe
+%left Pipe
+%left Ampersand
 %nonassoc Eq Neq Lt Le Gt Ge
 %left Plus Minus
 %left Times Div
