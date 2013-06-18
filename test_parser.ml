@@ -118,6 +118,8 @@ let test_let () =
         "let type t = int in 1 end";
         "let type t = {x:int} in 1 end";
         "let type t = array of int in 1 end";
+        "let type s = a type t = b in 1 end";
+        "let type s = a var x := 1 type t = b in 1 end";
         "let function f() = 0 in 1 end";
         "let function f(): int = 0 in 1 end";
         "let function f(x:int) = x in 1 end";
@@ -129,9 +131,14 @@ let test_let () =
      LetExp([], [Int 1]);
      LetExp([VarDecl("x", Some "int", Int 1)], [LValue(Ident "x")]);
      LetExp([VarDecl("x", None, Int 1)], [LValue(Ident "x")]);
-     LetExp([TypeDecl("t", TypeId("int"))], [Int 1]);
-     LetExp([TypeDecl("t", TypeRecord [("x", "int")])], [Int 1]);
-     LetExp([TypeDecl("t", TypeArray "int")], [Int 1]);
+     LetExp([TypeDecl["t", TypeId("int")]], [Int 1]);
+     LetExp([TypeDecl["t", TypeRecord [("x", "int")]]], [Int 1]);
+     LetExp([TypeDecl["t", TypeArray "int"]], [Int 1]);
+     LetExp([TypeDecl["s", TypeId "a";
+                      "t", TypeId "b"]], [Int 1]);
+     LetExp([TypeDecl["s", TypeId "a"];
+             VarDecl("x", None, Int 1);
+             TypeDecl["t", TypeId "b"]], [Int 1]);
      LetExp([FunDecl([("f", [], None, Int 0)])], [Int 1]);
      LetExp([FunDecl([("f", [], Some "int", Int 0)])], [Int 1]);
      LetExp([FunDecl([("f", [("x", "int")], None, LValue(Ident "x"))])], [Int 1]);
