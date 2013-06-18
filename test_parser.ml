@@ -94,6 +94,19 @@ let test_bool () =
      BoolExp(Or(BoolExp(And(Int 1, Int 2)), Int 3));
     ]
 
+let test_assign () =
+  assert_equal
+    (List.map parse_string
+       ["a := 1";
+        "a.b := 1";
+        "a[0] := 1";
+        "a := (b := 1)";
+       ])
+    [Assign(Ident "a", Int 1);
+     Assign(RecordAccess(Ident "a", "b"), Int 1);
+     Assign(ArrayAccess(Ident "a", Int 0), Int 1);
+     Assign(Ident "a", Assign(Ident "b", Int 1));
+    ]
 
 let test_let () =
   assert_equal
@@ -198,6 +211,7 @@ let suite =
 
     "test_let" >:: test_let;
     "test_invalid_let" >:: test_invalid_let;
+    "test_assign" >:: test_assign;
 
     "test_if" >:: test_if;
     "test_loop" >:: test_loop;
