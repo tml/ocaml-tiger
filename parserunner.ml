@@ -64,11 +64,22 @@ and string_of_type_spec = function
 and string_of_decl = function
   | VarDecl (i, None, e) -> Printf.sprintf "var %s := %s" i (string_of_exp e)
   | VarDecl (i, Some t, e) -> Printf.sprintf "var %s: %s := %s" i t (string_of_exp e)
-  | TypeDecl (i, ts) -> Printf.sprintf "type %s = %s" i (string_of_type_spec ts)
-  | FunDecl (i, param_list, None, e) ->
-    Printf.sprintf "function %s (%s) =\n%s" i (string_of_tyfields ", " param_list) (string_of_exp e)
-  | FunDecl (i, param_list, Some t, e) ->
-    Printf.sprintf "function %s (%s): %s =\n%s" i (string_of_tyfields ", " param_list) t (string_of_exp e)
+  | TypeDecl ty_decls ->
+    String.concat "\n"
+      (List.map (fun (i, ts) ->
+        Printf.sprintf "type %s = %s" i (string_of_type_spec ts))
+         ty_decls)
+  | FunDecl fun_decls ->
+    String.concat "\n"
+      (List.map (fun (i, param_list, ty, e) ->
+        Printf.sprintf "function %s (%s)%s =\n%s"
+          i
+          (string_of_tyfields ", " param_list)
+          (match ty with
+          | None -> ""
+          | Some t -> ": " ^ t)
+          (string_of_exp e))
+         fun_decls)
 
 and string_of_binop op x y =
   string_of_exp x ^ op ^ string_of_exp y

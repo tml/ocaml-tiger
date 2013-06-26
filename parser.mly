@@ -3,6 +3,10 @@
   let pos p =
     Printf.sprintf "%d:%d" p.Lexing.pos_lnum (p.Lexing.pos_cnum - p.Lexing.pos_bol)
 
+ let make_paren_exp = function
+   | [e] -> e
+   | es -> Ast.ExpSeq es
+
 %}
 
 /* Keywords */
@@ -26,7 +30,6 @@
 %nonassoc Do
 %nonassoc Then
 %nonassoc Else
-%nonassoc If
 %nonassoc ColonEqual
 %left Pipe
 %left Ampersand
@@ -52,7 +55,7 @@ exp:
 | s=String { Ast.String s }
 | l=lvalue { Ast.LValue l }
 | f=funcall { f }
-| LParen es=exp_seq RParen { Ast.ExpSeq es }
+| LParen es=exp_seq RParen { make_paren_exp es }
 | ae=arith_exp { Ast.ArithExp ae }
 | ce=cmp_exp { Ast.CmpExp ce }
 | be=bool_exp { Ast.BoolExp be }
@@ -63,7 +66,6 @@ exp:
 | ite=if_then_else_stmt { ite }
 | a=array_exp { a }
 | r=record_exp { r }
-| LParen e=exp RParen { e }
 
 lvalue:
 | i=Ident { Ast.Ident i }
