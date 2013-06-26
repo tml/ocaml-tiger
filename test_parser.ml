@@ -1,6 +1,8 @@
 open OUnit
 open Ast
 
+let sym = Symbol.symbol
+
 let parse_string str =
   Parser.program Lexer.lexer (Lexing.from_string str)
 
@@ -24,9 +26,9 @@ let test_break () = assert_equal (parse_string "break") Break
 let test_funcall () =
   assert_equal
     (List.map parse_string ["f()"; "f(1)"; "f(1,x)"])
-    [FunCall("f", []);
-     FunCall("f", [Int 1]);
-     FunCall("f", [Int 1; LValue(Ident "x")])]
+    [FunCall(sym "f", []);
+     FunCall(sym "f", [Int 1]);
+     FunCall(sym "f", [Int 1; LValue(Ident (sym "x"))])]
 
 let test_invalid_funcall () =
   (* Can only use identifiers for function calls, not lvalues such as
@@ -39,13 +41,15 @@ let test_lvalue () =
   assert_equal
     (List.map parse_string ["x"; "x.y"; "x.y.z"; "x[0]"; "x[a+b]";
                             "x[0].y"; "x.y[0]"])
-    [LValue(Ident "x");
-     LValue(RecordAccess(Ident "x", "y"));
-     LValue(RecordAccess(RecordAccess(Ident "x", "y"), "z"));
-     LValue(ArrayAccess(Ident "x", Int 0));
-     LValue(ArrayAccess(Ident "x", ArithExp(Add(LValue(Ident "a"), LValue(Ident "b")))));
-     LValue(RecordAccess(ArrayAccess(Ident "x", Int 0), "y"));
-     LValue(ArrayAccess(RecordAccess(Ident "x", "y"), Int 0));
+    [LValue(Ident (sym "x"));
+     LValue(RecordAccess(Ident (sym "x"), sym "y"));
+     LValue(RecordAccess(RecordAccess(Ident (sym "x"), sym "y"), sym "z"));
+     LValue(ArrayAccess(Ident (sym "x"), Int 0));
+     LValue(ArrayAccess(Ident (sym "x"),
+                        ArithExp(Add(LValue(Ident (sym "a")),
+                                     LValue(Ident (sym "b"))))));
+     LValue(RecordAccess(ArrayAccess(Ident (sym "x"), Int 0), sym "y"));
+     LValue(ArrayAccess(RecordAccess(Ident (sym "x"), sym "y"), Int 0));
     ]
 
 
@@ -69,9 +73,9 @@ let test_cmp () =
   assert_equal
     (List.map parse_string ["1<2"; "x<=1"; "1=1"; "e>0"; "3>=2"])
     [CmpExp(Lt(Int 1, Int 2));
-     CmpExp(Le(LValue(Ident "x"), Int 1));
+     CmpExp(Le(LValue(Ident (sym "x")), Int 1));
      CmpExp(Eq(Int 1, Int 1));
-     CmpExp(Gt(LValue(Ident "e"), Int 0));
+     CmpExp(Gt(LValue(Ident (sym "e")), Int 0));
      CmpExp(Ge(Int 3, Int 2));
     ]
 
@@ -102,10 +106,10 @@ let test_assign () =
         "a[0] := 1";
         "a := (b := 1)";
        ])
-    [Assign(Ident "a", Int 1);
-     Assign(RecordAccess(Ident "a", "b"), Int 1);
-     Assign(ArrayAccess(Ident "a", Int 0), Int 1);
-     Assign(Ident "a", Assign(Ident "b", Int 1));
+    [Assign(Ident (sym "a"), Int 1);
+     Assign(RecordAccess(Ident (sym "a"), sym "b"), Int 1);
+     Assign(ArrayAccess(Ident (sym "a"), Int 0), Int 1);
+     Assign(Ident (sym "a"), Assign(Ident (sym "b"), Int 1));
     ]
 
 let test_let () =
@@ -129,27 +133,27 @@ let test_let () =
        ])
     [LetExp([], []);
      LetExp([], [Int 1]);
-     LetExp([VarDecl("x", Some "int", Int 1)], [LValue(Ident "x")]);
-     LetExp([VarDecl("x", None, Int 1)], [LValue(Ident "x")]);
-     LetExp([TypeDecl["t", TypeId("int")]], [Int 1]);
-     LetExp([TypeDecl["t", TypeRecord [("x", "int")]]], [Int 1]);
-     LetExp([TypeDecl["t", TypeArray "int"]], [Int 1]);
-     LetExp([TypeDecl["s", TypeId "a";
-                      "t", TypeId "b"]], [Int 1]);
-     LetExp([TypeDecl["s", TypeId "a"];
-             VarDecl("x", None, Int 1);
-             TypeDecl["t", TypeId "b"]], [Int 1]);
-     LetExp([FunDecl([("f", [], None, Int 0)])], [Int 1]);
-     LetExp([FunDecl([("f", [], Some "int", Int 0)])], [Int 1]);
-     LetExp([FunDecl([("f", [("x", "int")], None, LValue(Ident "x"))])], [Int 1]);
-     LetExp([FunDecl([("f", [("x", "int"); ("y", "int")], Some "int",
-                     ArithExp(Add(LValue(Ident "x"), LValue(Ident "y"))))])],
+     LetExp([VarDecl(sym "x", Some (sym "int"), Int 1)], [LValue(Ident (sym "x"))]);
+     LetExp([VarDecl(sym "x", None, Int 1)], [LValue(Ident (sym "x"))]);
+     LetExp([TypeDecl[sym "t", TypeId(sym "int")]], [Int 1]);
+     LetExp([TypeDecl[sym "t", TypeRecord [(sym "x", sym "int")]]], [Int 1]);
+     LetExp([TypeDecl[sym "t", TypeArray (sym "int")]], [Int 1]);
+     LetExp([TypeDecl[sym "s", TypeId (sym "a");
+                      sym "t", TypeId (sym "b")]], [Int 1]);
+     LetExp([TypeDecl[sym "s", TypeId (sym "a")];
+             VarDecl(sym "x", None, Int 1);
+             TypeDecl[sym "t", TypeId (sym "b")]], [Int 1]);
+     LetExp([FunDecl([(sym "f", [], None, Int 0)])], [Int 1]);
+     LetExp([FunDecl([(sym "f", [], Some (sym "int"), Int 0)])], [Int 1]);
+     LetExp([FunDecl([(sym "f", [(sym "x", sym "int")], None, LValue(Ident (sym "x")))])], [Int 1]);
+     LetExp([FunDecl([(sym "f", [(sym "x", sym "int"); (sym "y", sym "int")], Some (sym "int"),
+                     ArithExp(Add(LValue(Ident (sym "x")), LValue(Ident (sym "y")))))])],
             [Int 1]);
-     LetExp([FunDecl [("a", [], None, Int 1);
-                      ("b", [], None, Int 2)]], [Int 1]);
-     LetExp([FunDecl [("a", [], None, Int 1)];
-             VarDecl ("b", None, Int 2);
-             FunDecl [("c", [], None, Int 3)]], [Int 1]);
+     LetExp([FunDecl [(sym "a", [], None, Int 1);
+                      (sym "b", [], None, Int 2)]], [Int 1]);
+     LetExp([FunDecl [(sym "a", [], None, Int 1)];
+             VarDecl (sym "b", None, Int 2);
+             FunDecl [(sym "c", [], None, Int 3)]], [Int 1]);
 
     ]
 
@@ -188,7 +192,7 @@ let test_loop () =
         "for i := 0 to 1 do 2";
        ])
     [While(Int 0, Int 1);
-     For("i", Int 0, Int 1, Int 2);
+     For(sym "i", Int 0, Int 1, Int 2);
     ]
 
 let test_aggregate_expressions () =
@@ -199,10 +203,10 @@ let test_aggregate_expressions () =
         "empty {}";
         "point {x=3; y=4}";
        ])
-    [Array("int", Int 3, Int 0);
-     Array("int", Int 3, Array("int", Int 3, Int 0));
-     Record("empty", []);
-     Record("point", [("x", Int 3); ("y", Int 4)]);
+    [Array(sym "int", Int 3, Int 0);
+     Array(sym "int", Int 3, Array(sym "int", Int 3, Int 0));
+     Record(sym "empty", []);
+     Record(sym "point", [(sym "x", Int 3); (sym "y", Int 4)]);
     ]
 
 

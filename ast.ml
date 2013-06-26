@@ -1,5 +1,5 @@
-type id = string
-type type_id = string
+type id = Symbol.symbol
+type type_id = Symbol.symbol
 type tyfields = (id * type_id) list
 type type_spec =
   | TypeId of type_id
