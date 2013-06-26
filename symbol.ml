@@ -17,18 +17,18 @@ let name (s, _) = s
 
 
 module SymbolTable = Map.Make(struct
-  type t = symbol
-  let compare (_, x) (_, y) = compare x y
+  type t = int
+  let compare = Pervasives.compare
 end)
 
 type 'a table = 'a SymbolTable.t
 
 let empty = SymbolTable.empty
 
-let put symtable key value = SymbolTable.add key value symtable
+let put symtable (_, index) value = SymbolTable.add index value symtable
 
-let get symtable key =
+let get symtable (_, index) =
   try
-    Some (SymbolTable.find key symtable)
+    Some (SymbolTable.find index symtable)
   with Not_found ->
     None
