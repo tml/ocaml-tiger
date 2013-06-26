@@ -139,7 +139,7 @@ type_spec:
 record_type:
 | { [] }
 | v=Ident Colon t=Ident { [(Symbol.symbol v, Symbol.symbol t)] }
-| v=Ident Colon t=Ident SemiColon rt=record_type { (Symbol.symbol v, Symbol.symbol t)::rt }
+| v=Ident Colon t=Ident Comma rt=record_type { (Symbol.symbol v, Symbol.symbol t)::rt }
 
 fun_decls:
 | ds=nonempty_list(fun_decl) { Ast.FunDecl ds }
@@ -181,4 +181,4 @@ record_exp:
 field_inits:
 | { [] }
 | i=Ident Eq e=exp { [(Symbol.symbol i, e)] }
-| i=Ident Eq e=exp SemiColon rest=field_inits { (Symbol.symbol i, e)::rest }
+| i=Ident Eq e=exp Comma rest=field_inits { (Symbol.symbol i, e)::rest }

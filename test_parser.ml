@@ -201,7 +201,7 @@ let test_aggregate_expressions () =
        ["int[3] of 0";
         "int[3] of int[3] of 0";
         "empty {}";
-        "point {x=3; y=4}";
+        "point {x=3, y=4}";
        ])
     [Array(sym "int", Int 3, Int 0);
      Array(sym "int", Int 3, Array(sym "int", Int 3, Int 0));
@@ -209,6 +209,26 @@ let test_aggregate_expressions () =
      Record(sym "point", [(sym "x", Int 3); (sym "y", Int 4)]);
     ]
 
+
+let test_samples () =
+  let loop () =
+    try
+      let d = Unix.opendir "testcases" in
+      while true do
+        let f = Unix.readdir d in
+        if f <> "." && f <> ".." then begin
+          let ch = open_in (Filename.concat "testcases" f) in
+          ignore (Parser.program Lexer.lexer (Lexing.from_channel ch));
+          close_in ch
+        end
+      done;
+      Unix.closedir d;
+      true
+    with
+    | End_of_file -> true
+    | Error.Error -> false
+  in
+  assert_bool "test_samples" (loop ())
 
 let suite =
   "parser suite" >::: [
@@ -236,6 +256,8 @@ let suite =
     "test_loop" >:: test_loop;
 
     "test_aggregate_expressions" >:: test_aggregate_expressions;
+
+    "test_samples" >:: test_samples;
   ]
 
 let _ =
