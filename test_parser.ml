@@ -210,26 +210,6 @@ let test_aggregate_expressions () =
     ]
 
 
-let test_samples () =
-  let loop () =
-    try
-      let d = Unix.opendir "testcases" in
-      while true do
-        let f = Unix.readdir d in
-        if f <> "." && f <> ".." then begin
-          let ch = open_in (Filename.concat "testcases" f) in
-          ignore (Parser.program Lexer.lexer (Lexing.from_channel ch));
-          close_in ch
-        end
-      done;
-      Unix.closedir d;
-      true
-    with
-    | End_of_file -> true
-    | Error.Error -> false
-  in
-  assert_bool "test_samples" (loop ())
-
 let suite =
   "parser suite" >::: [
     "test_nil" >:: test_nil;
@@ -256,8 +236,6 @@ let suite =
     "test_loop" >:: test_loop;
 
     "test_aggregate_expressions" >:: test_aggregate_expressions;
-
-    "test_samples" >:: test_samples;
   ]
 
 let _ =
