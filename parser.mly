@@ -11,6 +11,12 @@
    let sym1 = Symbol.symbol i1
    and sym2 = Symbol.symbol i2 in
    Ast.RecordAccess(Ast.Ident sym1, sym2)
+
+ let make_fun_decl i pl o e =
+   match o with
+  | None -> (Symbol.symbol i, pl, None, e)
+  | Some t -> (Symbol.symbol i, pl, Some t, e)
+
 %}
 
 /* Keywords */
@@ -82,14 +88,10 @@ funcall:
 | i=Ident LParen el=exp_list RParen { Ast.FunCall(Symbol.symbol i, el) }
 
 exp_list:
-| { [] }
-| e=exp { [e] }
-| e=exp Comma el=exp_list { e::el }
+| el=separated_list(Comma, exp) { el }
 
 exp_seq:
-| { [] }
-| e=exp { [e] }
-| e=exp SemiColon es = exp_seq { e::es }
+| es=separated_list(SemiColon, exp) { es }
 
 
 %inline arith_exp:
@@ -146,17 +148,16 @@ fun_decls:
 
 fun_decl:
 | Function i=Ident LParen pl=param_list RParen o=option(colon_id) Eq e=exp {
-  match o with
-  | None -> (Symbol.symbol i, pl, None, e)
-  | Some t -> (Symbol.symbol i, pl, Some t, e)
+  make_fun_decl i pl o e
 }
 
 colon_id: Colon t=Ident { Symbol.symbol t }
 
 param_list:
-| { [] }
-| v=Ident Colon t=Ident { [(Symbol.symbol v, Symbol.symbol t)] }
-| v=Ident Colon t=Ident Comma pl=param_list { (Symbol.symbol v, Symbol.symbol t)::pl }
+| pl=separated_list(Comma, param) { pl }
+
+param:
+v=Ident Colon t=Ident { (Symbol.symbol v, Symbol.symbol t) }
 
 
 assign_stmt:
@@ -179,6 +180,7 @@ record_exp:
 | i=Ident LBrace fields=field_inits RBrace { Ast.Record(Symbol.symbol i, fields) }
 
 field_inits:
-| { [] }
-| i=Ident Eq e=exp { [(Symbol.symbol i, e)] }
-| i=Ident Eq e=exp Comma rest=field_inits { (Symbol.symbol i, e)::rest }
+| fl=separated_list(Comma, field_init) { fl }
+
+field_init:
+| i=Ident Eq e=exp { (Symbol.symbol i, e) }
