@@ -1,3 +1,9 @@
+type pos = {
+  filename: string;
+  line: int;
+  col: int;
+}
+
 type id = Symbol.symbol
 type type_id = Symbol.symbol
 type tyfields = (id * type_id) list
