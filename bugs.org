@@ -1,3 +1,5 @@
 * BUGS
 ** Lexer
-- [2013-06-13 Thu 12:45] Handling of escape codes in strings needs work
+- [2013-06-13 Thu] Handling of escape codes in strings needs work
+** Parser
+- [2013-06-27 Thu] 3 conflicts in parser.

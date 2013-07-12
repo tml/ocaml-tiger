@@ -1,26 +1,29 @@
 type ty = Types.t
 type access = unit
 type env_entry =
-  | VarEntry of Types.t
-  | FunEntry of Types.t list * Types.t
+  | VarEntry of ty
+  | FunEntry of ty list * ty
 
 let (|>) x f = f x
 
 
 let base_tenv =
-  Symbol.empty
-  |> Symbol.put (Symbol.symbol "int") Types.Int
-  |> Symbol.put (Symbol.symbol "string") Types.Strin
+  List.fold_left (fun symtable (sym, ty) -> Symbol.put symtable sym ty)
+    Symbol.empty
+    [Symbol.symbol "int", Types.Int;
+     Symbol.symbol "string", Types.String]
 
-let base_env =
-  Symbol.empty
-  |> Symbol.put (Symbol.symbol "print") (FunEntry [Types.String], Types.Unit)
-  |> Symbol.put (Symbol.symbol "flush") (FunEntry [], Types.Unit)
-  |> Symbol.put (Symbol.symbol "getchar") (FunEntry [], Types.String)
-  |> Symbol.put (Symbol.symbol "ord") (FunEntry [Types.String], Types.Int)
-  |> Symbol.put (Symbol.symbol "chr") (FunEntry [Types.Int], Types.String)
-  |> Symbol.put (Symbol.symbol "size") (FunEntry [Types.String], Types.Int)
-  |> Symbol.put (Symbol.symbol "substring") (FunEntry [Types.String; Types.Int; Types.Int], Types.String)
-  |> Symbol.put (Symbol.symbol "concat") (FunEntry [Types.String; Types.String], Types.String)
-  |> Symbol.put (Symbol.symbol "not") (FunEntry [Types.Int], Types.Int)
-  |> Symbol.put (Symbol.symbol "exit") (FunEntry [Types.Int], Types.Unit)
+let base_venv =
+  List.fold_left (fun symtable (sym, ty) -> Symbol.put symtable sym ty)
+    Symbol.empty
+    [Symbol.symbol "print",     FunEntry([Types.String], Types.Unit);
+     Symbol.symbol "flush",     FunEntry([], Types.Unit);
+     Symbol.symbol "getchar",   FunEntry([], Types.String);
+     Symbol.symbol "ord",       FunEntry([Types.String], Types.Int);
+     Symbol.symbol "chr",       FunEntry([Types.Int], Types.String);
+     Symbol.symbol "size",      FunEntry([Types.String], Types.Int);
+     Symbol.symbol "substring", FunEntry([Types.String; Types.Int; Types.Int], Types.String);
+     Symbol.symbol "concat",    FunEntry([Types.String; Types.String], Types.String);
+     Symbol.symbol "not",       FunEntry([Types.Int], Types.Int);
+     Symbol.symbol "exit",      FunEntry([Types.Int], Types.Unit);
+    ]

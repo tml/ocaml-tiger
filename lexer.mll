@@ -1,6 +1,7 @@
 {
  open Parser
  exception LexingError of string
+
 }
 
 let alpha = ['a' - 'z' 'A' - 'Z' '_']

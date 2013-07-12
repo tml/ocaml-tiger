@@ -15,3 +15,4 @@ test:
 runners:
 	ocamlbuild -use-menhir -menhir 'menhir --infer --explain' lexrunner.$(EXT)
 	ocamlbuild -use-menhir -menhir 'menhir --infer --explain' parserunner.$(EXT)
+	ocamlbuild -use-menhir -menhir 'menhir --infer --explain' semantrunner.$(EXT)
