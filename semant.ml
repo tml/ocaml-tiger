@@ -16,7 +16,7 @@ let rec translate_exp venv tenv exp =
   match exp with
   | Ast.Int x -> {exp=undef; ty=Types.Int}
   | Ast.String s -> {exp=undef; ty=Types.String}
-  | Ast.Nil -> {exp=undef; ty=Types.Nil}
+  | Ast.Nil _ -> {exp=undef; ty=Types.Nil}
   | Ast.Break -> {exp=undef; ty=Types.Unit}
   | Ast.ArithExp ae -> translate_arith_exp venv tenv ae
   | Ast.BoolExp be -> translate_bool_exp venv tenv be

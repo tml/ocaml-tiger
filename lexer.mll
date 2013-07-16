@@ -10,6 +10,12 @@
        Lexing.pos_bol = pos.Lexing.pos_cnum
      }
 
+ let line pos =
+   pos.Lexing.pos_lnum
+
+ let col pos =
+   pos.Lexing.pos_cnum - pos.Lexing.pos_bol
+
  let error lexbuf msg =
    let reason = Printf.sprintf "%s (%d, %d)"
      msg

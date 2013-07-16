@@ -1,9 +1,3 @@
-type pos = {
-  filename: string;
-  line: int;
-  col: int;
-}
-
 type id = Symbol.symbol
 type type_id = Symbol.symbol
 type tyfields = (id * type_id) list
@@ -16,7 +10,7 @@ type exp =
   | Int of int
   | String of string
   | LValue of lvalue
-  | Nil
+  | Nil of Lexing.position
   | Break
   | FunCall of id * exp list
   | Array of type_id * exp * exp

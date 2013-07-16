@@ -1,8 +1,5 @@
 %{
 
-  let pos p =
-    Printf.sprintf "%d:%d" p.Lexing.pos_lnum (p.Lexing.pos_cnum - p.Lexing.pos_bol)
-
  let make_paren_exp = function
    | [e] -> e
    | es -> Ast.ExpSeq es
@@ -58,7 +55,7 @@ program:
 | error { raise Error.Error }
 
 exp:
-| Nil { Ast.Nil }
+| Nil { Ast.Nil $startpos }
 | Break { Ast.Break }
 | x=Int { Ast.Int x }
 | Minus x=exp %prec Uminus { Ast.ArithExp (Ast.Sub(Ast.Int 0, x)) }

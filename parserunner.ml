@@ -4,7 +4,7 @@ let rec string_of_exp = function
   | Int x -> string_of_int x
   | String s -> "\"" ^ s ^ "\""
   | LValue l -> string_of_lvalue l
-  | Nil -> "nil"
+  | Nil pos -> Printf.sprintf "nil (%d, %d)" (Lexer.line pos) (Lexer.col pos)
   | Break -> "break"
   | FunCall(id, exps) -> Printf.sprintf "%s(%s)" (Symbol.name id) (String.concat ", " (List.map string_of_exp exps))
   | ArithExp ae -> string_of_arith_exp ae
