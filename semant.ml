@@ -14,13 +14,13 @@ let check_int {exp; ty} =
 
 let rec translate_exp venv tenv exp =
   match exp with
-  | Ast.Int x -> {exp=undef; ty=Types.Int}
-  | Ast.String s -> {exp=undef; ty=Types.String}
+  | Ast.Int (x, _) -> {exp=undef; ty=Types.Int}
+  | Ast.String (s, _) -> {exp=undef; ty=Types.String}
   | Ast.Nil _ -> {exp=undef; ty=Types.Nil}
-  | Ast.Break -> {exp=undef; ty=Types.Unit}
-  | Ast.ArithExp ae -> translate_arith_exp venv tenv ae
-  | Ast.BoolExp be -> translate_bool_exp venv tenv be
-  | Ast.CmpExp ce -> translate_cmp_exp venv tenv ce
+  | Ast.Break _ -> {exp=undef; ty=Types.Unit}
+  | Ast.ArithExp (ae, _) -> translate_arith_exp venv tenv ae
+  | Ast.BoolExp (be, _) -> translate_bool_exp venv tenv be
+  | Ast.CmpExp (ce, _) -> translate_cmp_exp venv tenv ce
 
 and translate_arith_exp venv tenv ae =
   match ae with

@@ -1,19 +1,5 @@
 %{
 
- let make_paren_exp = function
-   | [e] -> e
-   | es -> Ast.ExpSeq es
-
- let make_record_access i1 i2 =
-   let sym1 = Symbol.symbol i1
-   and sym2 = Symbol.symbol i2 in
-   Ast.RecordAccess(Ast.Ident sym1, sym2)
-
- let make_fun_decl i pl o e =
-   match o with
-  | None -> (Symbol.symbol i, pl, None, e)
-  | Some t -> (Symbol.symbol i, pl, Some t, e)
-
 %}
 
 /* Keywords */
@@ -52,20 +38,24 @@
 
 program:
 | e=exp Eof { e }
-| error { raise Error.Error }
+| error { raise (Error.Error $startpos) }
 
 exp:
 | Nil { Ast.Nil $startpos }
-| Break { Ast.Break }
-| x=Int { Ast.Int x }
-| Minus x=exp %prec Uminus { Ast.ArithExp (Ast.Sub(Ast.Int 0, x)) }
-| s=String { Ast.String s }
-| l=lvalue { Ast.LValue l }
+| Break { Ast.Break $startpos }
+| x=Int { Ast.Int (x, $startpos) }
+| Minus x=exp %prec Uminus { Ast.ArithExp (Ast.Sub(Ast.Int (0, $startpos), x), $startpos) }
+| s=String { Ast.String (s, $startpos) }
+| l=lvalue { Ast.LValue (l, $startpos) }
 | f=funcall { f }
-| LParen es=exp_seq RParen { make_paren_exp es }
-| ae=arith_exp { Ast.ArithExp ae }
-| ce=cmp_exp { Ast.CmpExp ce }
-| be=bool_exp { Ast.BoolExp be }
+| LParen es=exp_seq RParen {
+  match es with
+  | [e] -> e
+  | es  -> Ast.ExpSeq (es, $startpos)
+}
+| ae=arith_exp { Ast.ArithExp (ae, $startpos) }
+| ce=cmp_exp { Ast.CmpExp (ce, $startpos) }
+| be=bool_exp { Ast.BoolExp (be, $startpos) }
 | le=let_exp { le }
 | a=assign_stmt { a }
 | w=while_stmt { w }
@@ -75,14 +65,18 @@ exp:
 | r=record_exp { r }
 
 lvalue:
-| i=Ident { Ast.Ident (Symbol.symbol i) }
-| i1=Ident Dot i2=Ident { make_record_access i1 i2 }
-| i=Ident LBracket e=exp RBracket { Ast.ArrayAccess(Ast.Ident (Symbol.symbol i), e) }
-| lv=lvalue LBracket e=exp RBracket { Ast.ArrayAccess(lv, e) }
-| lv=lvalue Dot i=Ident { Ast.RecordAccess(lv, Symbol.symbol i) }
+| i=Ident { Ast.Ident (Symbol.symbol i, $startpos) }
+| i1=Ident Dot i2=Ident {
+  let sym1 = Symbol.symbol i1
+  and sym2 = Symbol.symbol i2 in
+  Ast.RecordAccess(Ast.Ident (sym1, $startpos), sym2, $startpos)
+}
+| i=Ident LBracket e=exp RBracket { Ast.ArrayAccess(Ast.Ident ((Symbol.symbol i), $startpos), e, $startpos) }
+| lv=lvalue LBracket e=exp RBracket { Ast.ArrayAccess(lv, e, $startpos) }
+| lv=lvalue Dot i=Ident { Ast.RecordAccess(lv, Symbol.symbol i, $startpos) }
 
 funcall:
-| i=Ident LParen el=exp_list RParen { Ast.FunCall(Symbol.symbol i, el) }
+| i=Ident LParen el=exp_list RParen { Ast.FunCall(Symbol.symbol i, el, $startpos) }
 
 exp_list:
 | el=separated_list(Comma, exp) { el }
@@ -110,7 +104,7 @@ exp_seq:
 | e1=exp Pipe e2=exp { Ast.Or(e1, e2) }
 
 let_exp:
-| Let ds=decls In le=exp_seq End { Ast.LetExp(ds, le) }
+| Let ds=decls In le=exp_seq End { Ast.LetExp(ds, le, $startpos) }
 
 decls:
 | ds=list(decl) { ds }
@@ -121,31 +115,34 @@ decl:
 | fds=fun_decls { fds }
 
 var_decl:
-| Var i=Ident ColonEqual e=exp { Ast.VarDecl(Symbol.symbol i, None, e) }
-| Var i=Ident Colon t=Ident ColonEqual e=exp { Ast.VarDecl(Symbol.symbol i, Some (Symbol.symbol t), e) }
+| Var i=Ident ColonEqual e=exp { Ast.VarDecl(Symbol.symbol i, None, e, $startpos) }
+| Var i=Ident Colon t=Ident ColonEqual e=exp { Ast.VarDecl(Symbol.symbol i, Some (Symbol.symbol t), e, $startpos) }
 
 type_decls:
-| ds=nonempty_list(type_decl) { Ast.TypeDecl ds }
+| ds=nonempty_list(type_decl) { Ast.TypeDecl (ds, $startpos) }
 
 type_decl:
 | Type i=Ident Eq t=type_spec { (Symbol.symbol i, t) }
 
 type_spec:
-| i=Ident { Ast.TypeId (Symbol.symbol i) }
-| Array Of i=Ident { Ast.TypeArray (Symbol.symbol i) }
-| LBrace rt=record_type RBrace { Ast.TypeRecord rt }
+| i=Ident { Ast.TypeId (Symbol.symbol i, $startpos) }
+| Array Of i=Ident { Ast.TypeArray (Symbol.symbol i, $startpos) }
+| LBrace rt=record_type RBrace { Ast.TypeRecord (rt, $startpos) }
 
 record_type:
-| { [] }
-| v=Ident Colon t=Ident { [(Symbol.symbol v, Symbol.symbol t)] }
-| v=Ident Colon t=Ident Comma rt=record_type { (Symbol.symbol v, Symbol.symbol t)::rt }
+| fields=separated_list(Comma, record_type_field) { fields }
+
+record_type_field:
+| v=Ident Colon t=Ident { (Symbol.symbol v, Symbol.symbol t) }
 
 fun_decls:
-| ds=nonempty_list(fun_decl) { Ast.FunDecl ds }
+| ds=nonempty_list(fun_decl) { Ast.FunDecl (ds, $startpos) }
 
 fun_decl:
 | Function i=Ident LParen pl=param_list RParen o=option(colon_id) Eq e=exp {
-  make_fun_decl i pl o e
+  match o with
+  | None -> (Symbol.symbol i, pl, None, e)
+  | Some t -> (Symbol.symbol i, pl, Some t, e)
 }
 
 colon_id: Colon t=Ident { Symbol.symbol t }
@@ -158,23 +155,23 @@ v=Ident Colon t=Ident { (Symbol.symbol v, Symbol.symbol t) }
 
 
 assign_stmt:
-| l=lvalue ColonEqual e=exp { Ast.Assign(l, e) }
+| l=lvalue ColonEqual e=exp { Ast.Assign(l, e, $startpos) }
 
 while_stmt:
-| While e1=exp Do e2=exp { Ast.While(e1, e2) }
+| While e1=exp Do e2=exp { Ast.While(e1, e2, $startpos) }
 
 for_stmt:
-| For i=Ident ColonEqual e1=exp To e2=exp Do e3=exp { Ast.For(Symbol.symbol i, e1, e2, e3) }
+| For i=Ident ColonEqual e1=exp To e2=exp Do e3=exp { Ast.For(Symbol.symbol i, e1, e2, e3, $startpos) }
 
 if_then_else_stmt:
-| If e1=exp Then e2=exp { Ast.IfThen(e1, e2) }
-| If e1=exp Then e2=exp Else e3=exp { Ast.IfThenElse(e1, e2, e3) }
+| If e1=exp Then e2=exp { Ast.IfThen(e1, e2, $startpos) }
+| If e1=exp Then e2=exp Else e3=exp { Ast.IfThenElse(e1, e2, e3, $startpos) }
 
 array_exp:
-| i=Ident LBracket e1=exp RBracket Of e2=exp { Ast.Array(Symbol.symbol i, e1, e2) }
+| i=Ident LBracket e1=exp RBracket Of e2=exp { Ast.Array(Symbol.symbol i, e1, e2, $startpos) }
 
 record_exp:
-| i=Ident LBrace fields=field_inits RBrace { Ast.Record(Symbol.symbol i, fields) }
+| i=Ident LBrace fields=field_inits RBrace { Ast.Record(Symbol.symbol i, fields, $startpos) }
 
 field_inits:
 | fl=separated_list(Comma, field_init) { fl }

@@ -1,1 +1,1 @@
-exception Error
+exception Error of Lexing.position
